@@ -109,7 +109,7 @@ jsdev = open(fn, 'rb')
 # buf = bytearray(63)
 buf = array.array('B', [0] * 64)
 ioctl(jsdev, 0x80006a13 + (0x10000 * len(buf)), buf)  # JSIOCGNAME(len)
-js_name = buf.tostring().rstrip(b'\x00').decode('utf-8')
+js_name = buf.tobytes().rstrip(b'\x00').decode('utf-8')
 print(('Device name: %s' % js_name))
 
 # Get number of axes and buttons.
