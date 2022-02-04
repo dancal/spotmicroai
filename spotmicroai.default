@@ -20,7 +20,7 @@
 				"frequency": 50
 			}],
 			"pca9685_2": [{
-				"address": "0x42",
+				"address": "0x41",
 				"reference_clock_speed": 25000000,
 				"frequency": 50
 			}]

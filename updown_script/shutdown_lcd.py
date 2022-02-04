@@ -1,4 +1,4 @@
-#!/home/pi/spotmicroai/venv/bin/python3 -u
+#!/usr/bin/python
 
 from spotmicroai.lcd_screen_controller import LCD_16x2_I2C_driver
 import socket

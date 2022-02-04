@@ -15,7 +15,7 @@ from spotmicroai.utilities.config import Config
 
 log = Logger().setup_logger('CALIBRATE SERVOS')
 
-log.info('Calibrate rest position...')
+log.info('Calibrate init position...')
 
 pca = None
 
@@ -27,8 +27,7 @@ GPIO.output(gpio_port, False)
 
 i2c = busio.I2C(SCL, SDA)
 
-while True:
-    options = {
+options = {
         0: 'rear_shoulder_left      - PCA[' + str(Config().get(Config.MOTION_CONTROLLER_SERVOS_REAR_SHOULDER_LEFT_PCA9685)) + ']'
                                             + ' CHANNEL[' + str(Config().get(Config.MOTION_CONTROLLER_SERVOS_REAR_SHOULDER_LEFT_CHANNEL)) + ']'
                                             + '- ANGLE[' + str(Config().get(Config.MOTION_CONTROLLER_SERVOS_REAR_SHOULDER_LEFT_REST_ANGLE)) + ']'
@@ -48,43 +47,22 @@ while True:
         13: 'arm_lift               - PCA[' + str(Config().get(Config.ARM_CONTROLLER_SERVOS_ARM_LIFT_PCA9685)) + '] CHANNEL[' + str(Config().get(Config.ARM_CONTROLLER_SERVOS_ARM_LIFT_CHANNEL)) + ']  - ANGLE[' + str(Config().get(Config.MOTION_CONTROLLER_SERVOS_ARM_LIFT_REST_ANGLE)) + ']' + ' MIN[' + str(Config().get(Config.MOTION_CONTROLLER_SERVOS_ARM_LIFT_MIN_ANGLE)) + '] MAX[' + str(Config().get(Config.MOTION_CONTROLLER_SERVOS_ARM_LIFT_MAX_ANGLE)) + ']',
         14: 'arm_range              - PCA[' + str(Config().get(Config.ARM_CONTROLLER_SERVOS_ARM_RANGE_PCA9685)) + '] CHANNEL[' + str(Config().get(Config.ARM_CONTROLLER_SERVOS_ARM_RANGE_CHANNEL)) + '] - ANGLE[' + str(Config().get(Config.MOTION_CONTROLLER_SERVOS_ARM_RANGE_REST_ANGLE)) + ']' + ' MIN[' + str(Config().get(Config.MOTION_CONTROLLER_SERVOS_ARM_RANGE_MIN_ANGLE)) + '] MAX[' + str(Config().get(Config.MOTION_CONTROLLER_SERVOS_ARM_RANGE_MAX_ANGLE)) + ']',
         15: 'arm_cam_tilt           - PCA[' + str(Config().get(Config.ARM_CONTROLLER_SERVOS_ARM_CAM_TILT_PCA9685)) + '] CHANNEL[' + str(Config().get(Config.ARM_CONTROLLER_SERVOS_ARM_CAM_TILT_CHANNEL)) + '] - ANGLE[' + str(Config().get(Config.MOTION_CONTROLLER_SERVOS_ARM_CAM_TILT_REST_ANGLE)) + ']' + ' MIN[' + str(Config().get(Config.MOTION_CONTROLLER_SERVOS_ARM_CAM_TILT_MIN_ANGLE)) + '] MAX[' + str(Config().get(Config.MOTION_CONTROLLER_SERVOS_ARM_CAM_TILT_MAX_ANGLE)) + ']'
-    }
+}
 
-    title = 'the folder integration_tests for more tests' + os.linesep + \
-            '1. use "i2cdetect -y 1" to identify your i2c address' + os.linesep + \
-            '2. write your pca9685 i2c address(es) and settings in your configuration file ~/spotmicroai.json' + os.linesep + \
-            '3. if no angle is specified 90 will be the default position, for example if you just press enter' + os.linesep + \
-            '' + os.linesep + \
-            'write "menu" or "m" and press enter to return to the list of servos' + os.linesep + \
-            'write "exit" or "e" and press enter to exit' + os.linesep + \
-            '' + os.linesep + \
-            'please choose the servo to calibrate its rest position: '
+screen_options = list(options.values())
 
-    screen_options = list(options.values())
+# selected_option, selected_index = pick(screen_options, title)
+# PCA9685_ADDRESS, PCA9685_REFERENCE_CLOCK_SPEED, PCA9685_FREQUENCY, CHANNEL, MIN_PULSE, MAX_PULSE, REST_ANGLE = Config().get_by_section_name(selected_option.split()[0])
+for i, values in enumerate(screen_options):
+    # CA9685_ADDRESS, PCA9685_REFERENCE_CLOCK_SPEED, PCA9685_FREQUENCY, CHANNEL, MIN_PULSE, MAX_PULSE, REST_ANGLE = Config().get_by_section_name(values.split()[0])
+    PCA9685_ADDRESS, PCA9685_REFERENCE_CLOCK_SPEED, PCA9685_FREQUENCY, CHANNEL, MIN_PULSE, MAX_PULSE, REST_ANGLE, MIN_ANGLE, MAX_ANGLE = Config().get_by_section_name(values.split()[0])
 
-    selected_option, selected_index = pick(screen_options, title)
+    print(PCA9685_ADDRESS);
+    pca = PCA9685(i2c, address=int(PCA9685_ADDRESS, 0), reference_clock_speed=PCA9685_REFERENCE_CLOCK_SPEED)
+    pca.frequency = PCA9685_FREQUENCY
+    active_servo = servo.Servo(pca.channels[CHANNEL])
+    active_servo.set_pulse_width_range(min_pulse=MIN_PULSE, max_pulse=MAX_PULSE)
+    active_servo.angle = int(REST_ANGLE)
+    time.sleep(0.1)
+    pca.deinit()
 
-    PCA9685_ADDRESS, PCA9685_REFERENCE_CLOCK_SPEED, PCA9685_FREQUENCY, CHANNEL, MIN_PULSE, MAX_PULSE, REST_ANGLE, MIN_ANGLE, MAX_ANGLE = Config().get_by_section_name(selected_option.split()[0])
-
-    while True:
-
-        try:
-            user_input = input("Write the angle and press Enter, or press Enter for 90: ")
-
-            pca = PCA9685(i2c, address=int(PCA9685_ADDRESS, 0), reference_clock_speed=PCA9685_REFERENCE_CLOCK_SPEED)
-            pca.frequency = PCA9685_FREQUENCY
-
-            active_servo = servo.Servo(pca.channels[CHANNEL])
-            active_servo.set_pulse_width_range(min_pulse=MIN_PULSE, max_pulse=MAX_PULSE)
-
-            if user_input == 'menu' or user_input == 'm':
-                break
-            if user_input == 'exit' or user_input == 'e':
-                sys.exit(0)
-            elif user_input == '':
-                user_input = 90
-
-            active_servo.angle = int(user_input)
-            time.sleep(0.1)
-        finally:
-            pca.deinit()

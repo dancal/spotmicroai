@@ -19,7 +19,8 @@ log = Logger().setup_logger('Motion controller')
 class MotionController:
     boards = 1
 
-    is_activated = False
+    is_activated    = False
+    is_moving       = False
 
     i2c = None
     pca9685_1 = None
@@ -202,7 +203,7 @@ class MotionController:
 
                 event = self._motion_queue.get(block=True, timeout=60)
 
-                # log.debug(event)
+                log.info(event)
 
                 if event['start']:
                     if self.is_activated:
@@ -222,49 +223,48 @@ class MotionController:
 
                 if event['a']:
                     self.rest_position()
-
-                if event['hat0y']:
-                    self.body_move_body_up_and_down(event['hat0y'])
-
-                if event['hat0x']:
-                    self.body_move_body_left_right(event['hat0x'])
-
-                if event['ry']:
-                    self.body_move_body_up_and_down_analog(event['ry'])
-
-                if event['rx']:
-                    self.body_move_body_left_right_analog(event['rx'])
-
-                if event['hat0x'] and event['tl2']:
-                    # 2 buttons example
-                    pass
-
-                if event['y']:
-                    self.standing_position()
-
                 if event['b']:
-                    self.body_move_position_right()
-
+                    self.standing_position()
                 if event['x']:
-                    self.body_move_position_left()
+                    self.walk_forward(event['x'])
 
-                if event['tl']:
-                    self.arm_set_rotation(event['lx'])
+                #if event['hat0y']:
+                #    self.body_move_body_up_and_down(event['hat0y'])
+                #if event['hat0x']:
+                #    self.body_move_body_left_right(event['hat0x'])
 
-                if event['tl']:
-                    self.arm_set_lift(event['ly'])
+                #if event['ry']:
+                #    self.body_move_body_up_and_down_analog(event['ry'])
 
-                if event['tr']:
-                    self.arm_set_range(event['ly'])
+                #if event['rx']:
+                #    self.body_move_body_left_right_analog(event['rx'])
 
-                if event['tr']:
-                    self.arm_set_cam_tilt(event['ry'])
+                #if event['hat0x'] and event['tl2']:
+                #    # 2 buttons example
+                #    pass
+
+                #if event['y']:
+                #    self.standing_position()
+
+                #if event['b']:
+                #    self.body_move_position_right()
+
+                #if event['x']:
+                #    self.body_move_position_left()
+
+                #if event['tl']:
+                #    self.arm_set_rotation(event['lx'])
+                #if event['tl']:
+                #    self.arm_set_lift(event['ly'])
+                #if event['tr']:
+                #    self.arm_set_range(event['ly'])
+                #if event['tr']:
+                #    self.arm_set_cam_tilt(event['ry'])
 
                 self.move()
 
             except queue.Empty as e:
-                log.info('Inactivity lasted 60 seconds, shutting down the servos, '
-                         'press start to reactivate')
+                log.info('Inactivity lasted 60 seconds, shutting down the servos, press start to reactivate')
                 if self.is_activated:
                     self.rest_position()
                     time.sleep(0.5)
@@ -292,13 +292,11 @@ class MotionController:
 
     def activate_pca9685_boards(self):
 
-        self.pca9685_1 = PCA9685(self.i2c, address=self.pca9685_1_address,
-                                 reference_clock_speed=self.pca9685_1_reference_clock_speed)
+        self.pca9685_1 = PCA9685(self.i2c, address=self.pca9685_1_address, reference_clock_speed=self.pca9685_1_reference_clock_speed)
         self.pca9685_1.frequency = self.pca9685_1_frequency
 
         if self.pca9685_2_address:
-            self.pca9685_2 = PCA9685(self.i2c, address=self.pca9685_2_address,
-                                     reference_clock_speed=self.pca9685_2_reference_clock_speed)
+            self.pca9685_2 = PCA9685(self.i2c, address=self.pca9685_2_address, reference_clock_speed=self.pca9685_2_reference_clock_speed)
             self.pca9685_2.frequency = self.pca9685_2_frequency
             self.boards = 2
 
@@ -625,6 +623,21 @@ class MotionController:
             self.servo_arm_range.angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_ARM_RANGE_REST_ANGLE)
             self.servo_arm_cam_tilt.angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_ARM_CAM_TILT_REST_ANGLE)
 
+    def sitdown_position(self):
+
+        self.servo_rear_shoulder_left_rest_angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_REAR_SHOULDER_LEFT_REST_ANGLE)
+        self.servo_rear_leg_left_rest_angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_REAR_LEG_LEFT_REST_ANGLE)
+        self.servo_rear_feet_left_rest_angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_REAR_FEET_LEFT_REST_ANGLE)
+        self.servo_rear_shoulder_right_rest_angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_REAR_SHOULDER_RIGHT_REST_ANGLE)
+        self.servo_rear_leg_right_rest_angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_REAR_LEG_RIGHT_REST_ANGLE)
+        self.servo_rear_feet_right_rest_angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_REAR_FEET_RIGHT_REST_ANGLE)
+        self.servo_front_shoulder_left_rest_angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_FRONT_SHOULDER_LEFT_REST_ANGLE)
+        self.servo_front_leg_left_rest_angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_FRONT_LEG_LEFT_REST_ANGLE)
+        self.servo_front_feet_left_rest_angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_FRONT_FEET_LEFT_REST_ANGLE)
+        self.servo_front_shoulder_right_rest_angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_FRONT_SHOULDER_RIGHT_REST_ANGLE)
+        self.servo_front_leg_right_rest_angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_FRONT_LEG_RIGHT_REST_ANGLE)
+        self.servo_front_feet_right_rest_angle = Config().get(Config.MOTION_CONTROLLER_SERVOS_FRONT_FEET_RIGHT_REST_ANGLE)
+
     def body_move_body_up_and_down(self, raw_value):
 
         range = 10
@@ -713,6 +726,166 @@ class MotionController:
         self.servo_front_shoulder_left_rest_angle = delta_b
         self.servo_front_shoulder_right_rest_angle = delta_b
 
+    def servoAngle(servo, raw_value):
+        servonum    = int(servo)
+        value       = int(raw_value)
+        if servonum == 1:
+            self.servo_front_shoulder_left_rest_angle   = value
+        elif servonum == 2:
+            self.servo_front_leg_left_rest_angle        = value
+        elif servonum == 3:
+            self.servo_front_feet_left_rest_angle       = value
+        elif servonum == 4:
+            self.servo_front_shoulder_right_rest_angle  = value
+        elif servonum == 5:
+            self.servo_front_leg_right_rest_angle       = value
+        elif servonum == 6:
+            self.servo_front_feet_right_rest_angle      = value
+        elif servonum == 7:
+            self.servo_rear_shoulder_left_rest_angle    = value
+        elif servonum == 8:
+            self.servo_rear_leg_left_rest_angle         = value
+        elif servonum == 9:
+            self.servo_rear_feet_left_rest_angle        = value
+        elif servonum == 10:
+            self.servo_rear_shoulder_right_rest_angle   = value
+        elif servonum == 11:
+            self.servo_rear_leg_right_rest_angle        = value
+        elif servonum == 12:
+            self.servo_rear_feet_right_rest_angle       = value
+
+        print(servonum)
+
+    # Making one step in the forward direction
+    def walk_FLF_forward_s1(self):
+
+        REST_STEP   = 5
+        LEG_STEP    = 10
+        FOOT_STEP   = 20
+        SLEEP       = 0.1
+
+        # STEP 1
+        self.servo_front_shoulder_left_rest_angle       -= REST_STEP
+        self.servo_front_leg_left_rest_angle            -= LEG_STEP
+        self.servo_front_feet_left_rest_angle           -= FOOT_STEP
+        self.move()
+        time.sleep(SLEEP)
+
+        # STEP 1
+        self.servo_front_shoulder_left_rest_angle       += REST_STEP
+        self.servo_front_leg_left_rest_angle            += LEG_STEP/2
+        self.servo_front_feet_left_rest_angle           += FOOT_STEP*2
+        self.move()
+        time.sleep(SLEEP)
+
+        # STEP 1
+        self.servo_front_leg_left_rest_angle            += LEG_STEP/2
+        self.servo_front_feet_left_rest_angle           -= FOOT_STEP
+        self.move()
+        time.sleep(SLEEP)
+
+    # Making one step in the forward direction
+    def walk_FRF_forward_s1(self):
+
+        REST_STEP   = 5
+        LEG_STEP    = 10
+        FOOT_STEP   = 20
+        SLEEP       = 0.1
+
+        # STEP 1
+        self.servo_front_shoulder_right.angle           = self.servo_front_shoulder_right_rest_angle + REST_STEP
+        self.servo_front_leg_right.angle                = self.servo_front_leg_right_rest_angle + LEG_STEP
+        self.servo_front_feet_right.angle               = self.servo_front_feet_right_rest_angle + FOOT_STEP
+        time.sleep(SLEEP)
+
+        #self.servo_front_shoulder_right.angle           = self.servo_front_shoulder_right_rest_angle + REST_STEP
+        #self.servo_front_leg_right.angle                = self.servo_front_leg_right_rest_angle + LEG_STEP
+        self.servo_front_feet_right.angle               = self.servo_front_feet_right_rest_angle - FOOT_STEP*2
+        time.sleep(SLEEP)
+
+        # STEP 1
+#        self.servo_front_shoulder_right_rest_angle       -= REST_STEP
+#        self.servo_front_leg_right_rest_angle            -= LEG_STEP/2
+#        self.servo_front_feet_right_rest_angle           -= FOOT_STEP
+#        self.move()
+#        time.sleep(SLEEP)
+
+        # STEP 1
+#        self.servo_front_leg_right_rest_angle            -= LEG_STEP/2
+#        self.servo_front_feet_right_rest_angle           += FOOT_STEP
+#        self.move()
+#        time.sleep(SLEEP)
+
+    # 얼굴 들고, 엉덩이 다운.
+    def face_up(self):
+
+        STEP    = 20
+        log.info("MOVING FORWARD!")
+
+        self.servo_rear_shoulder_left_rest_angle    += 20
+        self.servo_rear_leg_left_rest_angle         += 20
+        self.servo_rear_feet_left_rest_angle        += 20
+
+        self.servo_rear_shoulder_right_rest_angle   -= 20
+        self.servo_rear_leg_right_rest_angle        -= 20
+        self.servo_rear_feet_right_rest_angle       -= 20
+
+        self.servo_front_shoulder_left_rest_angle   += 20
+        self.servo_front_leg_left_rest_angle        += 20
+        self.servo_front_feet_left_rest_angle       += 20
+
+        self.servo_front_shoulder_right_rest_angle  -= 20
+        self.servo_front_leg_right_rest_angle       -= 20
+        self.servo_front_feet_right_rest_angle      -= 20
+
+    def move_backwards(self):
+        log.info("MOVING BACKWARDS!")
+        self.servo_rear_shoulder_left.angle     = self.servo_rear_shoulder_left_rest_angle + 20
+        self.servo_rear_leg_left.angle          = self.servo_rear_leg_left_rest_angle + 20
+        self.servo_rear_feet_left.angle         = self.servo_rear_feet_left_rest_angle + 20
+
+        self.servo_rear_shoulder_right.angle    = self.servo_rear_shoulder_right_rest_angle - 20
+        self.servo_rear_leg_right.angle         = self.servo_rear_leg_right_rest_angle - 20
+        self.servo_rear_feet_right.angle        = self.servo_rear_feet_right_rest_angle - 20
+
+        self.servo_front_shoulder_left.angle    = self.servo_front_shoulder_left_rest_angle + 20
+        self.servo_front_leg_left.angle         = self.servo_front_leg_left_rest_angle + 20
+        self.servo_front_feet_left.angle        = self.servo_front_feet_left_rest_angle + 20
+
+        self.servo_front_shoulder_right.angle   = self.servo_front_shoulder_right_rest_angle - 20
+        self.servo_front_leg_right.angle        = self.servo_front_leg_right_rest_angle - 20
+        self.servo_front_feet_right.angle       = self.servo_front_feet_right_rest_angle - 20
+
+    def walk_forward(self, raw_value):
+
+        #if self.is_moving:
+        #    print(self.is_moving)
+        #    time.sleep(0.1)
+        #    return
+        self.servo_front_shoulder_left_rest_angle   -= 10
+        self.servo_front_leg_left_rest_angle        -= 20
+        self.servo_front_feet_left_rest_angle       -= 20   # U
+        self.move()
+        time.sleep(0.2)
+
+        self.servo_front_shoulder_left_rest_angle   += 10
+        self.servo_front_leg_left_rest_angle        += 10
+        self.servo_front_feet_left_rest_angle       += 20 + 20
+        self.move()
+        time.sleep(0.2)
+
+#        self.servo_front_feet_left_rest_angle       += 30   # D
+#        self.servo_front_shoulder_left_rest_angle   -= 10
+#        self.servo_front_leg_left_rest_angle        -= 20
+#        self.move()
+#        time.sleep(0.1)
+
+        #self.servo_front_shoulder_left_rest_angle    += 10
+        #self.servo_front_leg_left_rest_angle         += 20
+        #self.servo_front_feet_left_rest_angle        -= 15
+        #self.move()
+        ##time.sleep(0.1)
+
     def standing_position(self):
 
         variation_leg = 50
@@ -726,7 +899,7 @@ class MotionController:
         self.servo_rear_leg_right.angle = self.servo_rear_leg_right_rest_angle + variation_leg
         self.servo_rear_feet_right.angle = self.servo_rear_feet_right_rest_angle - variation_feet
 
-        time.sleep(0.05)
+        time.sleep(0.1)
 
         self.servo_front_shoulder_left.angle = self.servo_front_shoulder_left_rest_angle - 10
         self.servo_front_leg_left.angle = self.servo_front_leg_left_rest_angle - variation_leg + 5

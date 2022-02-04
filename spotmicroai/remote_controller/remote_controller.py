@@ -92,7 +92,7 @@ class RemoteControllerController:
                                 self.axis_states[axis] = fvalue
                                 self.previous_fvalue = fvalue
 
-                                if axis in ['lx', 'ly', 'lz', 'rx', 'ry', 'rz']:
+                                if axis in ['x', 'y', 'z', 'rx', 'ry', 'rz']:
                                     if i >= 6:
                                         i = 0
                                     else:
@@ -126,34 +126,33 @@ class RemoteControllerController:
 
                 # These constants were borrowed from linux/input.h
                 axis_names = {
-                    0x00: 'lx',
-                    0x01: 'ly',
-                    0x02: 'lz',
-                    0x03: 'rx',
-                    0x04: 'ry',
-                    0x05: 'rz',
-                    0x06: 'trottle',
-                    0x07: 'rudder',
-                    0x08: 'wheel',
-                    0x09: 'gas',
-                    0x0a: 'brake',
-                    0x10: 'hat0x',
-                    0x11: 'hat0y',
-                    0x12: 'hat1x',
-                    0x13: 'hat1y',
-                    0x14: 'hat2x',
-                    0x15: 'hat2y',
-                    0x16: 'hat3x',
-                    0x17: 'hat3y',
-                    0x18: 'pressure',
-                    0x19: 'distance',
-                    0x1a: 'tilt_x',
-                    0x1b: 'tilt_y',
-                    0x1c: 'tool_width',
-                    0x20: 'volume',
-                    0x28: 'misc',
+                    0x00 : 'lx',
+                    0x01 : 'ly',
+                    0x02 : 'rx',
+                    #0x03 : 'rx',
+                    #0x04 : 'ry',
+                    0x05 : 'ry',
+                    0x06 : 'trottle',
+                    0x07 : 'rudder',
+                    0x08 : 'wheel',
+                    0x09 : 'gas',
+                    0x0a : 'brake',
+                    0x10 : 'hat0x',
+                    0x11 : 'hat0y',
+                    0x12 : 'hat1x',
+                    0x13 : 'hat1y',
+                    0x14 : 'hat2x',
+                    0x15 : 'hat2y',
+                    0x16 : 'hat3x',
+                    0x17 : 'hat3y',
+                    0x18 : 'pressure',
+                    0x19 : 'distance',
+                    0x1a : 'tilt_x',
+                    0x1b : 'tilt_y',
+                    0x1c : 'tool_width',
+                    0x20 : 'volume',
+                    0x28 : 'misc',
                 }
-
                 button_names = {
                     0x120: 'trigger',
                     0x121: 'thumb',
@@ -206,7 +205,7 @@ class RemoteControllerController:
                 # buf = bytearray(63)
                 buf = array.array('B', [0] * 64)
                 ioctl(self.jsdev, 0x80006a13 + (0x10000 * len(buf)), buf)  # JSIOCGNAME(len)
-                js_name = buf.tostring().rstrip(b'\x00').decode('utf-8')
+                js_name = buf.tobytes().rstrip(b'\x00').decode('utf-8')
                 log.info(('Connected to device: %s' % js_name))
 
                 # Get number of axes and buttons.
