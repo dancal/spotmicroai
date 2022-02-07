@@ -224,15 +224,34 @@ class MotionController:
                 if event['a']:
                     self.rest_position()
                 if event['b']:
-                    self.standing_position()
+                    self.face_up()
                 if event['x']:
-                    self.walk_forward(event['x'])
+                    self.hello()
+                if event['y']:
+                    self.body_move_body_up_and_down(10)
+                    self.move()
+                    time.sleep(0.2)
+
+                    self.body_move_body_up_and_down(10)
+                    self.move()
+                    time.sleep(0.2)
+
+                    self.body_move_body_up_and_down(-10)
+                    self.move()
+                    time.sleep(0.2)
+                     
+                    self.body_move_body_up_and_down(-10)
+                    self.move()
+
+                if event['hat0y']:
+                    self.walk(event['hat0y'])
+                #if event['hat0x']:
+                #    self.walk_backward(event['hat0x'])
 
                 #if event['hat0y']:
                 #    self.body_move_body_up_and_down(event['hat0y'])
                 #if event['hat0x']:
                 #    self.body_move_body_left_right(event['hat0x'])
-
                 #if event['ry']:
                 #    self.body_move_body_up_and_down_analog(event['ry'])
 
@@ -271,7 +290,7 @@ class MotionController:
                     self.deactivate_pca9685_boards()
 
             except Exception as e:
-                log.error('Unknown problem while processing the queue of the motion controller')
+                log.error('Unknown problem while processing the queue of the motion controller' + e)
                 log.error(' - Most likely a servo is not able to get to the assigned position')
 
     def load_pca9685_boards_configuration(self):
@@ -726,166 +745,265 @@ class MotionController:
         self.servo_front_shoulder_left_rest_angle = delta_b
         self.servo_front_shoulder_right_rest_angle = delta_b
 
-    def servoAngle(servo, raw_value):
-        servonum    = int(servo)
-        value       = int(raw_value)
-        if servonum == 1:
-            self.servo_front_shoulder_left_rest_angle   = value
-        elif servonum == 2:
-            self.servo_front_leg_left_rest_angle        = value
-        elif servonum == 3:
-            self.servo_front_feet_left_rest_angle       = value
-        elif servonum == 4:
-            self.servo_front_shoulder_right_rest_angle  = value
-        elif servonum == 5:
-            self.servo_front_leg_right_rest_angle       = value
-        elif servonum == 6:
-            self.servo_front_feet_right_rest_angle      = value
-        elif servonum == 7:
-            self.servo_rear_shoulder_left_rest_angle    = value
-        elif servonum == 8:
-            self.servo_rear_leg_left_rest_angle         = value
-        elif servonum == 9:
-            self.servo_rear_feet_left_rest_angle        = value
-        elif servonum == 10:
-            self.servo_rear_shoulder_right_rest_angle   = value
-        elif servonum == 11:
-            self.servo_rear_leg_right_rest_angle        = value
-        elif servonum == 12:
-            self.servo_rear_feet_right_rest_angle       = value
+    def moveServoPos(self, servoDef, step):
 
-        print(servonum)
-
-    # Making one step in the forward direction
-    def walk_FLF_forward_s1(self):
-
-        REST_STEP   = 5
-        LEG_STEP    = 10
-        FOOT_STEP   = 20
-        SLEEP       = 0.1
-
-        # STEP 1
-        self.servo_front_shoulder_left_rest_angle       -= REST_STEP
-        self.servo_front_leg_left_rest_angle            -= LEG_STEP
-        self.servo_front_feet_left_rest_angle           -= FOOT_STEP
-        self.move()
-        time.sleep(SLEEP)
-
-        # STEP 1
-        self.servo_front_shoulder_left_rest_angle       += REST_STEP
-        self.servo_front_leg_left_rest_angle            += LEG_STEP/2
-        self.servo_front_feet_left_rest_angle           += FOOT_STEP*2
-        self.move()
-        time.sleep(SLEEP)
-
-        # STEP 1
-        self.servo_front_leg_left_rest_angle            += LEG_STEP/2
-        self.servo_front_feet_left_rest_angle           -= FOOT_STEP
-        self.move()
-        time.sleep(SLEEP)
-
-    # Making one step in the forward direction
-    def walk_FRF_forward_s1(self):
-
-        REST_STEP   = 5
-        LEG_STEP    = 10
-        FOOT_STEP   = 20
-        SLEEP       = 0.1
-
-        # STEP 1
-        self.servo_front_shoulder_right.angle           = self.servo_front_shoulder_right_rest_angle + REST_STEP
-        self.servo_front_leg_right.angle                = self.servo_front_leg_right_rest_angle + LEG_STEP
-        self.servo_front_feet_right.angle               = self.servo_front_feet_right_rest_angle + FOOT_STEP
-        time.sleep(SLEEP)
-
-        #self.servo_front_shoulder_right.angle           = self.servo_front_shoulder_right_rest_angle + REST_STEP
-        #self.servo_front_leg_right.angle                = self.servo_front_leg_right_rest_angle + LEG_STEP
-        self.servo_front_feet_right.angle               = self.servo_front_feet_right_rest_angle - FOOT_STEP*2
-        time.sleep(SLEEP)
-
-        # STEP 1
-#        self.servo_front_shoulder_right_rest_angle       -= REST_STEP
-#        self.servo_front_leg_right_rest_angle            -= LEG_STEP/2
-#        self.servo_front_feet_right_rest_angle           -= FOOT_STEP
-#        self.move()
-#        time.sleep(SLEEP)
-
-        # STEP 1
-#        self.servo_front_leg_right_rest_angle            -= LEG_STEP/2
-#        self.servo_front_feet_right_rest_angle           += FOOT_STEP
-#        self.move()
-#        time.sleep(SLEEP)
+        if servoDef == 'FLS':
+            self.servo_front_shoulder_left_rest_angle     += step
+        elif servoDef == 'FLL':
+            self.servo_front_leg_left_rest_angle          += step
+        elif servoDef == 'FLF':
+            self.servo_front_feet_left_rest_angle         += step
+        elif servoDef == 'FRS':
+            self.servo_front_shoulder_right_rest_angle   += step
+        elif servoDef == 'FRL':
+            self.servo_front_leg_right_rest_angle        += step
+        elif servoDef == 'FRF':
+            self.servo_front_feet_right_rest_angle       += step
+        elif servoDef == 'RLS':
+            self.servo_rear_shoulder_left_rest_angle     += step
+        elif servoDef == 'RLL':
+            self.servo_rear_leg_left_rest_angle          += step
+        elif servoDef == 'RLF':
+            self.servo_rear_feet_left_rest_angle       += step
+        elif servoDef == 'RRS':
+            self.servo_rear_shoulder_right_rest_angle    += step
+        elif servoDef == 'RRL':
+            self.servo_rear_leg_right_rest_angle         += step
+        elif servoDef == 'RRF':
+            self.servo_rear_feet_right_rest_angle        += step
 
     # 얼굴 들고, 엉덩이 다운.
     def face_up(self):
 
-        STEP    = 20
-        log.info("MOVING FORWARD!")
+        STEP    = 10
+        self.servo_rear_shoulder_left_rest_angle    += STEP
+        self.servo_rear_leg_left_rest_angle         += STEP
+        self.servo_rear_feet_left_rest_angle        += STEP
 
-        self.servo_rear_shoulder_left_rest_angle    += 20
-        self.servo_rear_leg_left_rest_angle         += 20
-        self.servo_rear_feet_left_rest_angle        += 20
+        self.servo_rear_shoulder_right_rest_angle   -= STEP
+        self.servo_rear_leg_right_rest_angle        -= STEP
+        self.servo_rear_feet_right_rest_angle       -= STEP
 
-        self.servo_rear_shoulder_right_rest_angle   -= 20
-        self.servo_rear_leg_right_rest_angle        -= 20
-        self.servo_rear_feet_right_rest_angle       -= 20
+        self.servo_front_shoulder_left_rest_angle   += STEP
+        self.servo_front_leg_left_rest_angle        += STEP
+        self.servo_front_feet_left_rest_angle       += STEP
 
-        self.servo_front_shoulder_left_rest_angle   += 20
-        self.servo_front_leg_left_rest_angle        += 20
-        self.servo_front_feet_left_rest_angle       += 20
+        self.servo_front_shoulder_right_rest_angle  -= STEP
+        self.servo_front_leg_right_rest_angle       -= STEP
+        self.servo_front_feet_right_rest_angle      -= STEP
 
-        self.servo_front_shoulder_right_rest_angle  -= 20
-        self.servo_front_leg_right_rest_angle       -= 20
-        self.servo_front_feet_right_rest_angle      -= 20
+    def hello(self):
+        self.moveServoPos('RRL', 10)
+        self.moveServoPos('RLL', -10)
+        self.move()
+        time.sleep(0.1)
+        self.moveServoPos('RRL', 10)
+        self.moveServoPos('RLL', -10)
+        self.move()
+        time.sleep(0.1)
+        self.moveServoPos('RRL', 10)
+        self.moveServoPos('RLL', -10)
+        self.move()
+        time.sleep(0.1)
+        self.moveServoPos('RRL', 10)
+        self.moveServoPos('RLL', -10)
+        self.move()
+        time.sleep(0.1)
 
-    def move_backwards(self):
-        log.info("MOVING BACKWARDS!")
-        self.servo_rear_shoulder_left.angle     = self.servo_rear_shoulder_left_rest_angle + 20
-        self.servo_rear_leg_left.angle          = self.servo_rear_leg_left_rest_angle + 20
-        self.servo_rear_feet_left.angle         = self.servo_rear_feet_left_rest_angle + 20
+        self.moveServoPos('RRL', -30)
+        self.moveServoPos('RLL', 30)
+        self.move()
+        time.sleep(0.1)
 
-        self.servo_rear_shoulder_right.angle    = self.servo_rear_shoulder_right_rest_angle - 20
-        self.servo_rear_leg_right.angle         = self.servo_rear_leg_right_rest_angle - 20
-        self.servo_rear_feet_right.angle        = self.servo_rear_feet_right_rest_angle - 20
+        # hands up 
+        self.moveServoPos('FRF', -20)
+        self.moveServoPos('FLF', 20)
+        self.move()
+        time.sleep(0.1)
+        self.moveServoPos('FRF', -20)
+        self.moveServoPos('FLF', 20)
+        self.move()
+        time.sleep(0.1)
 
-        self.servo_front_shoulder_left.angle    = self.servo_front_shoulder_left_rest_angle + 20
-        self.servo_front_leg_left.angle         = self.servo_front_leg_left_rest_angle + 20
-        self.servo_front_feet_left.angle        = self.servo_front_feet_left_rest_angle + 20
+        self.moveServoPos('FRL', 30)
+        self.moveServoPos('FLL', -30)
+        self.move()
+        time.sleep(0.1)
+        self.moveServoPos('FRL', 30)
+        self.moveServoPos('FLL', -30)
+        self.move()
+        time.sleep(0.1)
+        self.moveServoPos('FRL', 30)
+        self.moveServoPos('FLL', -30)
+        self.move()
+        time.sleep(0.1)
 
-        self.servo_front_shoulder_right.angle   = self.servo_front_shoulder_right_rest_angle - 20
-        self.servo_front_leg_right.angle        = self.servo_front_leg_right_rest_angle - 20
-        self.servo_front_feet_right.angle       = self.servo_front_feet_right_rest_angle - 20
+        # crap
+        for i in range(5):
+            self.moveServoPos('FRS', -30)
+            self.moveServoPos('FLS', 30)
+            self.move()
+            time.sleep(0.3)
+            self.moveServoPos('FRS', 30)
+            self.moveServoPos('FLS', -30)
+            self.move()
+            time.sleep(0.5)
+        
+        time.sleep(0.2)        
 
-    def walk_forward(self, raw_value):
+        for i in range(6):
+            self.moveServoPos('RRL', 10)
+            self.moveServoPos('RLL', -10)
+            self.move()
+            time.sleep(0.1)        
 
-        #if self.is_moving:
-        #    print(self.is_moving)
-        #    time.sleep(0.1)
-        #    return
-        self.servo_front_shoulder_left_rest_angle   -= 10
-        self.servo_front_leg_left_rest_angle        -= 20
-        self.servo_front_feet_left_rest_angle       -= 20   # U
+        time.sleep(0.2)        
+
+        for i in range(3):
+            self.moveServoPos('RRF', -10)
+            self.moveServoPos('RLF', 10)
+            self.move()
+            time.sleep(0.1)        
+
+        time.sleep(0.5)        
+        self.rest_position()
+
+    # ok
+    def walk_font_right_leg_F(self):
+
+        self.moveServoPos('FRS', 10)
+        self.moveServoPos('FRF', 30)
+        self.moveServoPos('FRL', 30)
+        self.move()
+        time.sleep(0.1)
+
+        self.moveServoPos('FRS', -10)
+        self.moveServoPos('FRF', -40)
+        self.move()
+
+    def walk_font_right_leg_B(self):
+
+        self.moveServoPos('FRL', -30)
+        self.moveServoPos('FRF', 10)
+
+    # ok
+    def walk_font_left_leg_F(self):
+
+        self.moveServoPos('FLS', -10)
+        self.moveServoPos('FLL', -30)
+        self.moveServoPos('FLF', -30)
+        self.move()
+        time.sleep(0.1)
+
+        self.moveServoPos('FLS', 10)
+        self.moveServoPos('FLF', 40)
+        self.move()
+
+    def walk_font_left_leg_B(self):
+
+        self.moveServoPos('FLL', 30)
+        self.moveServoPos('FLF', -10)
+
+    ## GOGO
+    def walk_rear_right_leg_F(self):
+
+        self.moveServoPos('RRS', -10)
+        self.moveServoPos('RRL', 20)
+        self.moveServoPos('RRF', 30)
+        self.move()
+        time.sleep(0.1)
+
+        self.moveServoPos('RRS', 10)
+        self.moveServoPos('RRF', -40)
+        self.move()
+
+    def walk_rear_right_leg_B(self):
+
+        self.moveServoPos('RRL', -20)
+        self.moveServoPos('RRF', 10)
+
+    ## 
+    def walk_rear_left_leg_F(self):
+
+        self.moveServoPos('RLS', 10)
+        self.moveServoPos('RLL', -20)
+        self.moveServoPos('RLF', -30)
+        self.move()
+        time.sleep(0.1)
+
+        self.moveServoPos('RLS', -10)
+        self.moveServoPos('RLF', 40)
+        self.move()
+
+    def walk_rear_left_leg_B(self):
+
+        self.moveServoPos('RLL', 20)
+        self.moveServoPos('RLF', -10)
+
+
+    def walk_forward(self):
+
+        STEP_SHOULDER       = 10
+        STEP_LEG            = 20 
+        STEP_FOOT           = 20
+
+        self.moveServoPos('FRS', STEP_SHOULDER)
+        self.moveServoPos('FRF', STEP_FOOT)
+        self.moveServoPos('FRL', STEP_LEG)
+        self.moveServoPos('RLS', STEP_SHOULDER)
+        self.moveServoPos('RLL', -STEP_LEG)
+        self.moveServoPos('RLF', -STEP_FOOT)
+        self.move()
+        time.sleep(0.1)
+
+        self.moveServoPos('FRS', -STEP_SHOULDER)
+        self.moveServoPos('FRF', -STEP_FOOT)
+        self.moveServoPos('RLS', -STEP_SHOULDER)
+        self.moveServoPos('RLF', STEP_FOOT)
         self.move()
         time.sleep(0.2)
 
-        self.servo_front_shoulder_left_rest_angle   += 10
-        self.servo_front_leg_left_rest_angle        += 10
-        self.servo_front_feet_left_rest_angle       += 20 + 20
+        self.moveServoPos('FRL', -STEP_LEG)
+        self.moveServoPos('RLL', STEP_LEG)
+
+        ##
+        self.moveServoPos('FLS', -STEP_SHOULDER)
+        self.moveServoPos('FLL', -STEP_LEG)
+        self.moveServoPos('FLF', -STEP_FOOT)
+        self.moveServoPos('RRS', -STEP_SHOULDER)
+        self.moveServoPos('RRL', STEP_LEG)
+        self.moveServoPos('RRF', STEP_FOOT)
+        self.move()
+        time.sleep(0.1)
+
+        self.moveServoPos('FLS', STEP_SHOULDER)
+        self.moveServoPos('FLF', STEP_FOOT)
+        self.moveServoPos('RRS', STEP_SHOULDER)
+        self.moveServoPos('RRF', -STEP_FOOT)
         self.move()
         time.sleep(0.2)
 
-#        self.servo_front_feet_left_rest_angle       += 30   # D
-#        self.servo_front_shoulder_left_rest_angle   -= 10
-#        self.servo_front_leg_left_rest_angle        -= 20
-#        self.move()
-#        time.sleep(0.1)
+        self.moveServoPos('FLL', STEP_LEG)
+        self.moveServoPos('RRL', -STEP_LEG)
+        self.move()
+        time.sleep(0.05)
 
-        #self.servo_front_shoulder_left_rest_angle    += 10
-        #self.servo_front_leg_left_rest_angle         += 20
-        #self.servo_front_feet_left_rest_angle        -= 15
-        #self.move()
-        ##time.sleep(0.1)
+    def walk_backward(self):
+        self.moveServoPos('FRS', 10)
+        self.moveServoPos('FRF', 30)
+        self.moveServoPos('FRL', 30)
+        self.moveServoPos('RLS', 10)
+        self.moveServoPos('RLL', -20)
+        self.moveServoPos('RLF', -30)
+        self.move()
+        time.sleep(0.05)
 
+    def walk(self, raw_value):
+        if raw_value > 0:
+            self.walk_backward()
+        else:
+            self.walk_forward()
+        
     def standing_position(self):
 
         variation_leg = 50
@@ -959,42 +1077,3 @@ class MotionController:
         self.servo_front_leg_right.angle = self.servo_front_leg_right_rest_angle + variation_leg - 5
         self.servo_front_feet_right.angle = self.servo_front_feet_right_rest_angle - variation_feet + 5
 
-    def arm_set_rotation(self, raw_value):
-
-        if not self.servo_arm_rotation_pca9685:
-            return
-
-        left_position = int(General().maprange((-1, 1), (0, 180), raw_value / 2))
-
-        if int(self.servo_arm_rotation.angle) != int(left_position):
-            self.servo_arm_rotation.angle = left_position
-
-    def arm_set_lift(self, raw_value):
-
-        if not self.servo_arm_rotation_pca9685:
-            return
-
-        lift_position = int(General().maprange((-1, 1), (180, 0), raw_value / 2))
-
-        if int(self.servo_arm_lift.angle) != int(lift_position):
-            self.servo_arm_lift.angle = lift_position
-
-    def arm_set_range(self, raw_value):
-
-        if not self.servo_arm_rotation_pca9685:
-            return
-
-        range_position = int(General().maprange((-1, 1), (180, 0), raw_value / 2))
-
-        if int(self.servo_arm_range.angle) != int(range_position):
-            self.servo_arm_range.angle = range_position
-
-    def arm_set_cam_tilt(self, raw_value):
-
-        if not self.servo_arm_rotation_pca9685:
-            return
-
-        tilt_position = int(General().maprange((-1, 1), (100, 150), raw_value))
-
-        if int(self.servo_arm_cam_tilt.angle) != int(tilt_position):
-            self.servo_arm_cam_tilt.angel = tilt_position
