@@ -225,8 +225,8 @@ class MotionController:
                     self.rest_position()
                 if event['b']:
                     self.face_up()
-                if event['x']:
-                    self.hello()
+                #if event['x']:
+                #    self.hello()
                 if event['y']:
                     self.body_move_body_up_and_down(10)
                     self.move()
@@ -245,8 +245,8 @@ class MotionController:
 
                 if event['hat0y']:
                     self.walk(event['hat0y'])
-                #if event['hat0x']:
-                #    self.walk_backward(event['hat0x'])
+                if event['hat0x']:
+                    self.wal_left_right(event['hat0x'])
 
                 #if event['hat0y']:
                 #    self.body_move_body_up_and_down(event['hat0y'])
@@ -776,21 +776,48 @@ class MotionController:
     def face_up(self):
 
         STEP    = 10
-        self.servo_rear_shoulder_left_rest_angle    += STEP
-        self.servo_rear_leg_left_rest_angle         += STEP
-        self.servo_rear_feet_left_rest_angle        += STEP
+        for i in range(3):
+            self.servo_rear_shoulder_left_rest_angle    += STEP
+            self.servo_rear_leg_left_rest_angle         += STEP
+            self.servo_rear_feet_left_rest_angle        += STEP
 
-        self.servo_rear_shoulder_right_rest_angle   -= STEP
-        self.servo_rear_leg_right_rest_angle        -= STEP
-        self.servo_rear_feet_right_rest_angle       -= STEP
+            self.servo_rear_shoulder_right_rest_angle   -= STEP
+            self.servo_rear_leg_right_rest_angle        -= STEP
+            self.servo_rear_feet_right_rest_angle       -= STEP
 
-        self.servo_front_shoulder_left_rest_angle   += STEP
-        self.servo_front_leg_left_rest_angle        += STEP
-        self.servo_front_feet_left_rest_angle       += STEP
+            self.servo_front_shoulder_left_rest_angle   += STEP
+            self.servo_front_leg_left_rest_angle        += STEP
+            self.servo_front_feet_left_rest_angle       += STEP
 
-        self.servo_front_shoulder_right_rest_angle  -= STEP
-        self.servo_front_leg_right_rest_angle       -= STEP
-        self.servo_front_feet_right_rest_angle      -= STEP
+            self.servo_front_shoulder_right_rest_angle  -= STEP
+            self.servo_front_leg_right_rest_angle       -= STEP
+            self.servo_front_feet_right_rest_angle      -= STEP
+            self.move()
+            time.sleep(0.1)
+
+        time.sleep(2)
+
+        STEP    = -10
+        for i in range(3):
+            self.servo_rear_shoulder_left_rest_angle    += STEP
+            self.servo_rear_leg_left_rest_angle         += STEP
+            self.servo_rear_feet_left_rest_angle        += STEP
+
+            self.servo_rear_shoulder_right_rest_angle   -= STEP
+            self.servo_rear_leg_right_rest_angle        -= STEP
+            self.servo_rear_feet_right_rest_angle       -= STEP
+
+            self.servo_front_shoulder_left_rest_angle   += STEP
+            self.servo_front_leg_left_rest_angle        += STEP
+            self.servo_front_feet_left_rest_angle       += STEP
+
+            self.servo_front_shoulder_right_rest_angle  -= STEP
+            self.servo_front_leg_right_rest_angle       -= STEP
+            self.servo_front_feet_right_rest_angle      -= STEP
+            self.move()
+            time.sleep(0.1)
+
+        time.sleep(0.5)        
 
     def hello(self):
         self.moveServoPos('RRL', 10)
@@ -940,12 +967,14 @@ class MotionController:
         self.moveServoPos('RLL', 20)
         self.moveServoPos('RLF', -10)
 
-
-    def walk_forward(self):
-
+    def walk(self, raw_value):
         STEP_SHOULDER       = 10
         STEP_LEG            = 20 
-        STEP_FOOT           = 20
+        STEP_FOOT           = 30
+        if raw_value > 0:
+            STEP_SHOULDER   = 10
+            STEP_LEG        = -20 
+            STEP_FOOT       = 40
 
         self.moveServoPos('FRS', STEP_SHOULDER)
         self.moveServoPos('FRF', STEP_FOOT)
@@ -987,23 +1016,18 @@ class MotionController:
         self.moveServoPos('RRL', -STEP_LEG)
         self.move()
         time.sleep(0.05)
-
-    def walk_backward(self):
-        self.moveServoPos('FRS', 10)
-        self.moveServoPos('FRF', 30)
-        self.moveServoPos('FRL', 30)
-        self.moveServoPos('RLS', 10)
-        self.moveServoPos('RLL', -20)
-        self.moveServoPos('RLF', -30)
-        self.move()
-        time.sleep(0.05)
-
-    def walk(self, raw_value):
-        if raw_value > 0:
-            self.walk_backward()
-        else:
-            self.walk_forward()
         
+    def wal_left_right(self, raw_value):
+        STEP_SHOULDER       = 10
+        STEP_LEG            = 20 
+        STEP_FOOT           = 30
+        if raw_value > 0:
+            # right
+        else:
+            # left
+        print(raw_value) 
+
+
     def standing_position(self):
 
         variation_leg = 50
